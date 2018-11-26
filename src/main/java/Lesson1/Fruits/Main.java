@@ -45,7 +45,6 @@ public class Main {
             orangeBox2.putFruitIn(new Orange());
         }
 
-
         System.out.println("Вес 1-ой коробки с яблоками: " + appleBox1.getWeight());
         System.out.println("Вес 2-ой коробки с яблоками: " + appleBox2.getWeight());
 
@@ -67,8 +66,5 @@ public class Main {
 
         System.out.print("2-я коробка с апельсинами и 2-я коробка с яблоками имеют ");
         System.out.println((appleBox2.compareWith(orangeBox2)?"одинаковый":"разный") + " вес");
-
-
-
     }
 }
