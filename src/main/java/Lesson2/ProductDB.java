@@ -20,7 +20,7 @@ package Lesson2;
  */
 
 import java.sql.*;
-
+import java.util.Scanner;
 
 
 public class ProductDB {
@@ -33,14 +33,115 @@ public class ProductDB {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Failed to find JDBC driver", e);
         }
+
+        initDB();
+
+
+        while (true) {
+            Scanner sc = new Scanner(System.in);
+            System.out.println("Введите команду");
+            String str = sc.nextLine();
+            String[] cmd = str.split(" ", 3);
+            if (cmd[0].equals("/цена")) {
+                findPrice(cmd[1]);
+            } else if (cmd[0].equals("/товарыпоцене")) {
+                findProductsByPrice(cmd);
+            } else if (cmd[0].equals("/сменитьцену")) {
+                changePrice(cmd);
+            } else if (cmd[0].equals("/конец")) {
+                System.exit(0);
+            } else {
+                System.out.println("Неизвестная команда.");
+            }
+        }
+    }
+
+    /**
+     * Метод выполняющий запрос на изменение цены на товар в базе данных
+     * @param cmd параметры для выполнения SQL запроса, где: 1-й элемент - Наименование товара, 2-й Новая цена;
+     * @throws SQLException
+     */
+    private static void changePrice(String[] cmd) throws SQLException {
         Connection connection = createConnection();
-
-
         try {
-            dropTB(connection);
-            createTB(connection);
-        } finally {
+            Statement stmt = connection.createStatement();
+            int rowCount = stmt.executeUpdate("UPDATE Products SET cost = " + cmd[2] +
+                    " WHERE title = '" + cmd[1] + "'");
+            if (rowCount == 0){
+                System.out.println("Товар с таким названием отсутствует в базе данных.");
+            }
+            System.out.println("Rows updated: " + rowCount);
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        finally {
             connection.close();
+        }
+    }
+
+    /**
+     * Метод выполняющий поиск товара по цене в базе данных, цена и наименование найденных позиций выводятся в консоль.
+     * @param cmd параметры для выполнения SQL запроса, где: 1-й и 2-й элемент границы поиска;
+     * @throws SQLException
+     */
+    private static void findProductsByPrice(String[] cmd) throws SQLException {
+        Connection connection = createConnection();
+        try {
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT title, cost FROM Products WHERE cost BETWEEN "+ cmd[1] +
+                    " AND " + cmd[2]);
+            if (!rs.next()){
+                System.out.println("Нет товаров в таком диапазоне цен.");
+            }
+            while (rs.next()) {
+                System.out.println("Товар: " + rs.getString(1) + " Цена: "+rs.getString(2));
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        finally {
+            connection.close();
+        }
+    }
+
+    /**
+     * Метод выполняющий поиск цены товара в базе данных, новая цена и наименование товара выводятся в консоль.
+     * @param s параметр(новая цена)  для выполнения SQL запроса;
+     * @throws SQLException
+     */
+    private static void findPrice(String s) throws SQLException {
+        Connection connection = createConnection();
+        try {
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT title,cost FROM Products WHERE title = '" + s +"'");
+
+            if (!rs.next()){
+                System.out.println("Товар с таким названием отсутствует в базе данных.");
+            } else {
+                System.out.println("Товар: " + rs.getString(1) + " Цена: " + rs.getString(2));
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        finally {
+            connection.close();
+        }
+    }
+
+    private static void initDB() throws SQLException {
+        try {
+            System.out.print("Database initialization....");
+            Connection connection = createConnection();
+            try {
+                dropTB(connection);
+                createTB(connection);
+            } finally {
+                connection.close();
+            }
+            System.out.println("Ok");
+        } catch (SQLException e){
+            System.out.println("Fail to initiate DataBase.");
         }
 
 
